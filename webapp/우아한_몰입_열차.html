@@ -65,6 +65,65 @@
             justify-content: center;
         }
 
+        /* 창밖 풍경 애니메이션 스타일 */
+        .scenery-view {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, #87CEEB 0%, #E0F7FA 100%);
+            display: none;
+            z-index: 5;
+            overflow: hidden;
+        }
+        .scenery-view.active { display: block; }
+        
+        .scenery-layer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 200%;
+            height: 100%;
+            background-repeat: repeat-x;
+            background-position: bottom left;
+        }
+        
+        /* 구름 */
+        .layer-clouds {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><circle cx="50" cy="50" r="20" fill="white" opacity="0.6"/><circle cx="70" cy="50" r="25" fill="white" opacity="0.6"/><circle cx="90" cy="50" r="20" fill="white" opacity="0.6"/><circle cx="250" cy="80" r="30" fill="white" opacity="0.4"/><circle cx="280" cy="80" r="35" fill="white" opacity="0.4"/></svg>');
+            height: 100%;
+            animation: move-scenery 60s linear infinite;
+        }
+        
+        /* 먼 산 */
+        .layer-mountains {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="200"><path d="M0,200 L100,80 L200,160 L350,40 L500,180 L600,120 L600,200 Z" fill="%23B2DFDB"/></svg>');
+            height: 40%;
+            opacity: 0.8;
+            animation: move-scenery 30s linear infinite;
+        }
+        
+        /* 나무 */
+        .layer-trees {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200"><path d="M30,200 L50,140 L70,200 Z" fill="%2326A69A"/><path d="M120,200 L150,110 L180,200 Z" fill="%2300897B"/><path d="M230,200 L250,150 L270,200 Z" fill="%2300796B"/></svg>');
+            height: 25%;
+            animation: move-scenery 10s linear infinite;
+        }
+
+        @keyframes move-scenery {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        /* 창틀 효과 */
+        .window-frame {
+            position: absolute;
+            inset: 0;
+            border: 20px solid #333;
+            border-radius: 32px;
+            pointer-events: none;
+            z-index: 10;
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.2);
+        }
+
         #moving-object {
             pointer-events: none;
             z-index: 50;
@@ -92,10 +151,10 @@
             top: 15px;
             left: 15px;
             right: 15px;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(12px);
-            border-radius: 20px;
-            padding: 12px 20px;
+            border-radius: 24px;
+            padding: 16px 24px;
             z-index: 100;
             border: 1px solid rgba(42, 193, 188, 0.2);
             display: flex;
@@ -212,6 +271,40 @@
         .guide-step.active {
             display: block;
         }
+
+        #travel-message {
+            transition: all 0.5s ease;
+            transform: scale(0.9);
+            opacity: 0;
+        }
+        #travel-message.show {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        /* 일시정지 오버레이 */
+        .pause-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 120;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            border-radius: 32px;
+        }
+        .pause-overlay.active { display: flex; }
+
+        .break-timer {
+            font-size: 5rem;
+            font-weight: 800;
+            font-family: monospace;
+            color: var(--woowa-mint);
+            text-shadow: 0 0 20px rgba(42, 193, 188, 0.5);
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -254,7 +347,6 @@
                             </div>
                         </div>
 
-                        <!-- 컴팩트해진 추가 시간 입력란 (지연 시간) -->
                         <div class="flex items-center justify-between bg-gray-50 px-4 py-3 rounded-2xl border border-gray-100">
                             <div class="flex flex-col">
                                 <label class="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1">Focus Delay</label>
@@ -298,23 +390,54 @@
             <!-- Right Map Area -->
             <div class="lg:col-span-2 space-y-6">
                 <div class="map-container woowa-shadow min-h-[650px]">
-                    <div id="focus-dashboard" class="floating-dashboard woowa-shadow">
-                        <div class="flex items-center gap-6">
-                            <div class="flex flex-col">
-                                <span id="timer-display" class="text-3xl font-mono font-bold text-[#2AC1BC]">00:00</span>
-                                <span id="current-leg-info" class="text-xs font-bold text-gray-500 uppercase tracking-tight">ON-TRACK</span>
+                    <!-- Scenery View (Window Effect) -->
+                    <div id="scenery-view" class="scenery-view">
+                        <div class="scenery-layer layer-clouds"></div>
+                        <div class="scenery-layer layer-mountains"></div>
+                        <div class="scenery-layer layer-trees"></div>
+                        <div class="window-frame"></div>
+                    </div>
+
+                    <!-- 일시정지 및 휴식 모드 오버레이 -->
+                    <div id="pause-overlay" class="pause-overlay">
+                        <div id="break-view" class="hidden text-center animate-fadeIn">
+                            <p class="text-xl font-bold mb-2">간이역에서 정차 중입니다...</p>
+                            <div id="break-timer-display" class="break-timer mb-6">05:00</div>
+                            <button id="cancel-break-btn" class="px-8 py-3 bg-white text-gray-800 font-bold rounded-full hover:bg-[#2AC1BC] hover:text-white transition-all">정차 종료 (운행 재개)</button>
+                        </div>
+                        <div id="pause-menu" class="text-center">
+                            <h3 class="text-2xl font-bold mb-6">운행 일시 정지</h3>
+                            <div class="flex flex-col gap-3">
+                                <button id="resume-btn" class="px-10 py-4 btn-primary font-bold rounded-2xl">운행 다시 시작</button>
+                                <button id="start-break-btn" class="px-10 py-4 bg-white text-[#2AC1BC] border-2 border-[#2AC1BC] font-bold rounded-2xl hover:bg-[#EBFBFA]">5분간 정차 (휴식)</button>
                             </div>
-                            <div class="h-8 w-[1px] bg-gray-200"></div>
-                            <div id="progress-bar-bg" class="w-32 md:w-48 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                <div id="progress-bar" class="bg-[#2AC1BC] h-full w-0 rounded-full transition-all duration-1000"></div>
+                        </div>
+                    </div>
+
+                    <div id="focus-dashboard" class="floating-dashboard woowa-shadow">
+                        <div class="flex flex-col flex-1 gap-2">
+                            <div id="travel-message" class="text-xs font-bold text-[#2AC1BC] bg-[#EBFBFA] px-3 py-1 rounded-full self-start">여행을 시작합니다!</div>
+                            <div class="flex items-center gap-6">
+                                <div class="flex flex-col">
+                                    <span id="timer-display" class="text-3xl font-mono font-bold text-[#2AC1BC]">00:00</span>
+                                    <span id="current-leg-info" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">ON-TRACK</span>
+                                </div>
+                                <div class="h-8 w-[1px] bg-gray-200"></div>
+                                <div id="progress-bar-bg" class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                    <div id="progress-bar" class="bg-[#2AC1BC] h-full w-0 rounded-full transition-all duration-1000"></div>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="flex items-center gap-2">
-                            <button id="pause-focus-btn" class="p-3 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-all flex items-center justify-center w-12 h-12">
+                        <div class="flex items-center gap-3 ml-6">
+                            <!-- 화면 전환 토글 버튼 -->
+                            <button id="view-toggle-btn" class="p-3 bg-gray-100 text-gray-600 rounded-2xl hover:bg-gray-200 transition-all flex flex-col items-center justify-center w-12 h-12" title="화면 전환 (지도/풍경)">
+                                <span id="view-icon" class="text-lg">🗺️</span>
+                            </button>
+                            <button id="pause-focus-btn" class="p-3 bg-gray-100 text-gray-600 rounded-2xl hover:bg-gray-200 transition-all flex items-center justify-center w-12 h-12">
                                 <span id="pause-btn-icon">⏸</span>
                             </button>
-                            <button id="stop-focus-btn" class="p-3 bg-red-50 text-red-500 rounded-full hover:bg-red-100 transition-all border border-red-200 flex items-center justify-center w-12 h-12">
+                            <button id="stop-focus-btn" class="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-100 transition-all border border-red-200 flex items-center justify-center w-12 h-12">
                                 <span>⏹</span>
                             </button>
                         </div>
@@ -390,20 +513,19 @@
             </div>
 
             <div id="step-2" class="guide-step animate-fadeIn">
-                <div class="w-12 h-12 bg-[#EBFBFA] text-[#2AC1BC] rounded-2xl flex items-center justify-center text-2xl mb-6">🎧</div>
-                <h3 class="text-2xl font-bold mb-3">몰입을 돕는 ASMR</h3>
+                <div class="w-12 h-12 bg-[#EBFBFA] text-[#2AC1BC] rounded-2xl flex items-center justify-center text-2xl mb-6">🚂</div>
+                <h3 class="text-2xl font-bold mb-3">지도와 풍경 선택</h3>
                 <p class="text-gray-500 text-sm leading-relaxed mb-6">
-                    운행이 시작되면 오른쪽 하단에서 배경음을 선택할 수 있습니다.<br><br>
-                    기차의 규칙적인 진동음이나 백색 소음은 주변 소음을 차단하고 깊은 몰입을 도와줍니다.
+                    운행이 시작되면 대시보드의 🗺️ 아이콘을 눌러 **'실시간 지도'**와 **'창밖 풍경'**을 전환할 수 있습니다. 지도를 보며 위치를 확인하거나 풍경을 보며 몰입해보세요.
                 </p>
                 <button class="next-step-btn w-full py-4 bg-[#2AC1BC] text-white font-bold rounded-xl hover:opacity-90">다음으로</button>
             </div>
 
             <div id="step-3" class="guide-step animate-fadeIn">
-                <div class="w-12 h-12 bg-[#EBFBFA] text-[#2AC1BC] rounded-2xl flex items-center justify-center text-2xl mb-6">🚀</div>
-                <h3 class="text-2xl font-bold mb-3">운행 중 몰입 지키기</h3>
+                <div class="w-12 h-12 bg-[#EBFBFA] text-[#2AC1BC] rounded-2xl flex items-center justify-center text-2xl mb-6">⏸</div>
+                <h3 class="text-2xl font-bold mb-3">일시 정지 및 정차(휴식)</h3>
                 <p class="text-gray-500 text-sm leading-relaxed mb-6">
-                    '운행 시작'을 누르면 열차가 출발하며 타이머가 작동합니다. 운행 중에는 노선을 변경할 수 없으니, <b>목적지에 도착할 때까지 몰입을 유지하세요!</b>
+                    잠시 쉬어가야 할 땐 일시정지 버튼을 누르세요. **'정차(휴식)'** 기능을 통해 5분간의 달콤한 휴식 타이머를 사용할 수 있습니다. 휴식이 끝나면 다시 열차를 출발시키세요!
                 </p>
                 <button id="start-app-btn" class="w-full py-4 bg-[#2AC1BC] text-white font-bold rounded-xl hover:opacity-90">몰입 시작하기</button>
             </div>
@@ -450,9 +572,13 @@
         let selectedPath = [];
         let isFocusing = false;
         let isPaused = false;
+        let isBreak = false;
+        let isMapView = false; // 지도 모드 vs 풍경 모드
         let timerInterval = null;
+        let breakInterval = null;
         let totalSecondsRemaining = 0;
         let initialTotalSeconds = 0;
+        let breakSecondsRemaining = 0;
         let history = [];
         let selectedSound = 'train';
         let currentGuideStep = 1;
@@ -493,7 +619,7 @@
 
                 ambientGain = ctx.createGain();
                 ambientGain.gain.setValueAtTime(0, ctx.currentTime);
-                ambientGain.gain.linearRampToValueAtTime(isPaused ? 0 : 0.4, ctx.currentTime + 1);
+                ambientGain.gain.linearRampToValueAtTime(isPaused || isBreak ? 0 : 0.4, ctx.currentTime + 1);
 
                 const source = ctx.createBufferSource();
                 source.buffer = createNoiseBuffer();
@@ -505,7 +631,7 @@
                     filter.type = 'lowpass';
                     filter.frequency.setValueAtTime(120, ctx.currentTime);
                     const createClack = () => {
-                        if (!isFocusing || isPaused || selectedSound !== 'train') return;
+                        if (!isFocusing || isPaused || isBreak || selectedSound !== 'train') return;
                         const now = ctx.currentTime;
                         ambientGain.gain.setTargetAtTime(0.6, now, 0.05);
                         ambientGain.gain.setTargetAtTime(0.4, now + 0.15, 0.1);
@@ -561,6 +687,11 @@
         const pathCard = document.getElementById('path-card');
         const resetModal = document.getElementById('reset-modal');
         const guideModal = document.getElementById('guide-modal');
+        const travelMessage = document.getElementById('travel-message');
+        const sceneryView = document.getElementById('scenery-view');
+        const pauseOverlay = document.getElementById('pause-overlay');
+        const viewToggleBtn = document.getElementById('view-toggle-btn');
+        const viewIcon = document.getElementById('view-icon');
 
         function init() {
             STATIONS.forEach(s => {
@@ -590,6 +721,10 @@
             document.getElementById('modal-cancel-btn').onclick = () => resetModal.style.display = 'none';
             document.getElementById('modal-confirm-btn').onclick = () => { resetModal.style.display = 'none'; resetToMain(); };
             document.getElementById('pause-focus-btn').onclick = togglePause;
+            document.getElementById('resume-btn').onclick = togglePause;
+            document.getElementById('start-break-btn').onclick = startBreak;
+            document.getElementById('cancel-break-btn').onclick = endBreak;
+            viewToggleBtn.onclick = toggleViewMode;
             
             startSelect.onchange = updateLegPreview;
             endSelect.onchange = updateLegPreview;
@@ -625,17 +760,62 @@
             });
         }
 
-        function togglePause() {
+        function toggleViewMode() {
             if (!isFocusing) return;
+            isMapView = !isMapView;
+            if (isMapView) {
+                sceneryView.classList.remove('active');
+                viewIcon.textContent = "🖼️"; // 지도 보고 있을 때 아이콘은 '풍경'
+            } else {
+                sceneryView.classList.add('active');
+                viewIcon.textContent = "🗺️"; // 풍경 보고 있을 때 아이콘은 '지도'
+            }
+        }
+
+        function togglePause() {
+            if (!isFocusing || isBreak) return;
             isPaused = !isPaused;
             const btnIcon = document.getElementById('pause-btn-icon');
             if (isPaused) {
                 btnIcon.textContent = "▶";
                 AudioCtrl.setVolume(0);
+                pauseOverlay.classList.add('active');
+                document.getElementById('pause-menu').classList.remove('hidden');
+                document.getElementById('break-view').classList.add('hidden');
             } else {
                 btnIcon.textContent = "⏸";
                 AudioCtrl.setVolume(0.4);
+                pauseOverlay.classList.remove('active');
             }
+        }
+
+        function startBreak() {
+            isBreak = true;
+            isPaused = false;
+            document.getElementById('pause-menu').classList.add('hidden');
+            document.getElementById('break-view').classList.remove('hidden');
+            breakSecondsRemaining = 5 * 60; // 5분 휴식
+            updateBreakUI();
+            breakInterval = setInterval(() => {
+                breakSecondsRemaining--;
+                updateBreakUI();
+                if (breakSecondsRemaining <= 0) endBreak();
+            }, 1000);
+        }
+
+        function endBreak() {
+            clearInterval(breakInterval);
+            isBreak = false;
+            isPaused = false;
+            pauseOverlay.classList.remove('active');
+            document.getElementById('pause-btn-icon').textContent = "⏸";
+            AudioCtrl.setVolume(0.4);
+            AudioCtrl.playArrival(); // 휴식 끝 알림
+        }
+
+        function updateBreakUI() {
+            const m = Math.floor(breakSecondsRemaining / 60), s = breakSecondsRemaining % 60;
+            document.getElementById('break-timer-display').textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         }
 
         function updateLegPreview() {
@@ -694,12 +874,9 @@
                 total += leg.duration;
                 if (i === 0) pathD += `M ${leg.from.x} ${leg.from.y} `;
                 pathD += `L ${leg.to.x} ${leg.to.y} `;
-                
                 const item = document.createElement('div');
                 item.className = "ticket-card bg-gray-50 p-3 rounded-xl flex justify-between items-center animate-fadeIn";
-                
                 const delayText = leg.delay > 0 ? `<span class="text-[10px] text-orange-400 ml-1">(+${leg.delay} 지연)</span>` : '';
-                
                 item.innerHTML = `
                     <div class="text-sm">
                         <span class="font-bold">${leg.from.name}</span> 
@@ -728,13 +905,15 @@
 
         function startFocus() {
             if (selectedPath.length === 0) return;
-            isFocusing = true; isPaused = false;
+            isFocusing = true; isPaused = false; isBreak = false; isMapView = false;
             initialTotalSeconds = selectedPath.reduce((acc, leg) => acc + leg.duration, 0) * 60;
             totalSecondsRemaining = initialTotalSeconds;
             toggleUIControls(true); renderPath();
             tripStatus.style.display = 'none'; 
             focusDashboard.classList.add('active');
             cornerSoundPanel.classList.add('active');
+            sceneryView.classList.add('active'); // 풍경 기본 시작
+            viewIcon.textContent = "🗺️";
             
             AudioCtrl.playDeparture();
             AudioCtrl.startAmbient(selectedSound);
@@ -742,13 +921,26 @@
             if(timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(updateTimer, 1000);
             updateTimerUI(); moveObject(0);
+            showMessage("우아한 집중 열차, 출발합니다!");
         }
 
         function updateTimer() {
-            if (isPaused) return;
+            if (isPaused || isBreak) return;
             if (totalSecondsRemaining <= 0) { completeFocus(); return; }
-            totalSecondsRemaining--; updateTimerUI();
+            totalSecondsRemaining--; 
+            updateTimerUI();
             moveObject(1 - (totalSecondsRemaining / initialTotalSeconds));
+            
+            const elapsedMins = Math.floor((initialTotalSeconds - totalSecondsRemaining) / 60);
+            if ((initialTotalSeconds - totalSecondsRemaining) % 600 === 0 && elapsedMins > 0) {
+                showMessage(`${elapsedMins}분 동안 성실히 달리고 있어요!`);
+            }
+        }
+
+        function showMessage(msg) {
+            travelMessage.textContent = msg;
+            travelMessage.classList.add('show');
+            setTimeout(() => travelMessage.classList.remove('show'), 5000);
         }
 
         function updateTimerUI() {
@@ -769,10 +961,13 @@
 
         function resetToMain() {
             if (timerInterval) clearInterval(timerInterval);
-            isFocusing = isPaused = false;
+            if (breakInterval) clearInterval(breakInterval);
+            isFocusing = isPaused = isBreak = false;
             AudioCtrl.stopAmbient();
             focusDashboard.classList.remove('active');
             cornerSoundPanel.classList.remove('active');
+            sceneryView.classList.remove('active');
+            pauseOverlay.classList.remove('active');
             tripStatus.style.display = 'block';
             movingObject.setAttribute('transform', 'translate(-100, -100)');
             timerDisplay.textContent = "00:00";

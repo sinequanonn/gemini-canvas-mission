@@ -9,11 +9,12 @@
             --shelf-wood: #4e342e;
             --shelf-shadow: #2a1b18;
             --lp-case: #1e272e;
-            --bg-color: #f1f8f1; /* 연한 식물 톤 배경 */
-            --primary-green: #2d5a27; /* 활성 탭 및 강조색 */
-            --brand-brown: #67B362; /* 요청하신 추가 버튼용 색상 */
+            --bg-color: #f1f8f1;
+            --primary-green: #2d5a27;
+            --brand-brown: #67B362;
             --text-main: #2c3e50;
             --accent: #ffa502;
+            --placeholder-bg: #e8f0e8;
         }
 
         * {
@@ -25,9 +26,9 @@
 
         body {
             background-color: var(--bg-color);
-            background-image:
-                    radial-gradient(circle at 10% 20%, rgba(45, 90, 39, 0.05) 0%, transparent 20%),
-                    radial-gradient(circle at 90% 80%, rgba(45, 90, 39, 0.05) 0%, transparent 20%);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(45, 90, 39, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(45, 90, 39, 0.05) 0%, transparent 20%);
             color: var(--text-main);
             padding-bottom: 100px;
             min-height: 100vh;
@@ -60,25 +61,6 @@
             color: #6a8e6a;
             font-weight: 500;
             margin-top: 10px;
-        }
-
-        /* Leaf Decors */
-        header::before {
-            content: '🌿';
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-200px) rotate(-20deg);
-            font-size: 2rem;
-        }
-
-        header::after {
-            content: '🍃';
-            position: absolute;
-            top: 40px;
-            left: 50%;
-            transform: translateX(150px) rotate(15deg);
-            font-size: 1.5rem;
         }
 
         /* Tabs */
@@ -132,7 +114,7 @@
         .shelf-row {
             display: flex;
             align-items: flex-end;
-            gap: 6px;
+            gap: 10px;
             padding-bottom: 5px;
             overflow-x: auto;
             min-height: 180px;
@@ -188,7 +170,32 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.5);
         }
 
-        .lp-case img { width: 100%; height: 100%; object-fit: cover; }
+        /* Emoji Placeholder Logic */
+        .emoji-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f1f8f1, #d4e0d4);
+            color: #2d5a27;
+            font-size: 3rem;
+            text-align: center;
+        }
+
+        /* Movie Specific Placeholder Style */
+        .emoji-placeholder.movie-type {
+            background: linear-gradient(135deg, #2c3e50, #1e272e);
+            color: #ecf0f1;
+        }
+        
+        .lp-case img, .rec-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
 
         .lp-disc {
             position: absolute;
@@ -227,10 +234,10 @@
             transition: all 0.2s;
             color: white;
             font-size: 1rem;
-            background: var(--brand-brown); /* 요청하신 색상 적용 */
+            background: var(--brand-brown); 
         }
 
-        .btn-open-modal:hover { transform: scale(1.05); box-shadow: 0 12px 30px rgba(0,0,0,0.2); }
+        .btn-open-modal:hover { transform: scale(1.05); }
 
         /* Modal */
         .modal-overlay {
@@ -271,7 +278,6 @@
             width: 100%; padding: 14px; border: 2px solid #f1f2f6; border-radius: 12px; font-size: 1rem;
             outline: none; transition: border-color 0.3s;
         }
-        .input-group input:focus { border-color: var(--primary-green); }
 
         /* Recommendation */
         .rec-card {
@@ -285,7 +291,7 @@
         }
 
         .rec-card:hover { transform: translateX(15px); }
-        .rec-card img { width: 160px; height: 240px; object-fit: cover; }
+        .rec-card .img-wrapper { width: 160px; height: 240px; flex-shrink: 0; position: relative; overflow: hidden; }
         .rec-body { padding: 30px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
         .rec-aggro { font-size: 1.4rem; font-weight: 900; margin-bottom: 15px; color: #e67e22; line-height: 1.3; }
         .rec-title { font-weight: 800; font-size: 1.1rem; }
@@ -310,7 +316,6 @@
         <button id="tab-rec-btn" onclick="showTab('rec')">취향 저격 추천</button>
     </nav>
 
-    <!-- Main Collection Tab -->
     <div id="tab-home" class="tab-content active">
         <div class="action-container">
             <button class="btn-open-modal" onclick="openAddModal('book')">📚 책 추가하기</button>
@@ -319,20 +324,15 @@
 
         <div class="shelf-container">
             <div class="shelf-label">My Botanic Bookshelf</div>
-            <div id="book-shelf" class="shelf-row">
-                <!-- Books rendered here -->
-            </div>
+            <div id="book-shelf" class="shelf-row"></div>
         </div>
 
         <div class="shelf-container" style="background: #2c3e50;">
             <div class="shelf-label" style="color:rgba(255,255,255,0.2)">My Vinyl Rack</div>
-            <div id="movie-shelf" class="shelf-row lp-container">
-                <!-- LP items rendered here -->
-            </div>
+            <div id="movie-shelf" class="shelf-row lp-container"></div>
         </div>
     </div>
 
-    <!-- Recommendation Tab -->
     <div id="tab-rec" class="tab-content" style="display:none">
         <div style="display:flex; justify-content:center; gap:15px; margin-bottom:30px;">
             <button id="rec-book-btn" class="active" onclick="setRecType('book')">도서 추천</button>
@@ -342,18 +342,17 @@
     </div>
 </div>
 
-<!-- Modal Overlay (Common for Add and Edit) -->
 <div id="modal-overlay" class="modal-overlay">
     <div class="modal-content">
         <button class="modal-close" onclick="closeModal()">×</button>
         <h2 id="modal-title" style="margin-bottom:25px; color:var(--primary-green)">기록하기</h2>
-
+        
         <div id="form-content">
             <div class="input-group">
                 <label>제목</label>
                 <input type="text" id="item-title" placeholder="제목을 입력하세요">
             </div>
-
+            
             <div id="book-only-fields">
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
                     <div class="input-group">
@@ -377,7 +376,7 @@
                     </select>
                 </div>
                 <div class="input-group" id="file-upload-group">
-                    <label>포스터 이미지 업로드</label>
+                    <label>포스터 이미지 업로드 (선택)</label>
                     <input type="file" id="movie-file" accept="image/*">
                 </div>
             </div>
@@ -414,12 +413,28 @@
     let editIndex = -1;
     let recType = 'book';
 
-    // --- Core Logic ---
+    // 이미지가 없을 때 사용할 '이모지 대체' 헬퍼 함수
+    function renderImageWithFallback(src, type, emoji = '📖') {
+        const isMovie = (type === 'movie');
+        const fallbackClass = isMovie ? 'emoji-placeholder movie-type' : 'emoji-placeholder';
+        
+        if (!src || src === 'placeholder') {
+            return `<div class="${fallbackClass}"><span>${emoji}</span></div>`;
+        }
+        return `
+            <div style="width:100%; height:100%; position:relative;">
+                <img src="${src}" 
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="${fallbackClass}" style="display:none;"><span>${emoji}</span></div>
+            </div>
+        `;
+    }
+
     function saveDB() {
         try {
             localStorage.setItem('pick_n_log_plant_v1', JSON.stringify(db));
         } catch (e) {
-            showToast("이미지가 너무 커서 저장할 수 없어요! 😅");
+            showToast("이미지 용량이 너무 큽니다! 작은 이미지를 사용해주세요. 😅");
         }
     }
 
@@ -437,23 +452,20 @@
         if(tab === 'rec') renderRecommendations();
     }
 
-    // --- Modal Logic ---
     function closeModal() {
         document.getElementById('modal-overlay').style.display = 'none';
         editIndex = -1;
+        document.getElementById('movie-file').value = "";
     }
 
     function openAddModal(type) {
         currentModalType = type;
         editIndex = -1;
-
         document.getElementById('modal-overlay').style.display = 'flex';
         document.getElementById('modal-title').innerText = type === 'book' ? '📖 독서 기록 추가' : '🎞️ 영화 기록 추가';
         document.getElementById('book-only-fields').style.display = type === 'book' ? 'block' : 'none';
         document.getElementById('movie-only-fields').style.display = type === 'movie' ? 'block' : 'none';
         document.getElementById('btn-delete-item').style.display = 'none';
-
-        // Reset fields
         document.getElementById('item-title').value = '';
         document.getElementById('item-review').value = '';
         document.getElementById('item-rating').value = '5';
@@ -470,11 +482,10 @@
         document.getElementById('movie-only-fields').style.display = type === 'movie' ? 'block' : 'none';
         document.getElementById('btn-delete-item').style.display = 'block';
 
-        // Fill fields
         document.getElementById('item-title').value = item.title;
         document.getElementById('item-rating').value = item.rating;
         document.getElementById('item-review').value = item.review || '';
-
+        
         if (type === 'book') {
             document.getElementById('book-genre').value = item.genre;
             document.getElementById('book-pages').value = item.pages;
@@ -488,7 +499,7 @@
         const rating = document.getElementById('item-rating').value;
         const review = document.getElementById('item-review').value;
 
-        if (!title) return showToast("제목은 꼭 써주셔야 해요!");
+        if (!title) return showToast("제목을 입력해주세요!");
 
         let newItem = { title, rating, review };
 
@@ -496,13 +507,13 @@
             newItem.genre = document.getElementById('book-genre').value;
             newItem.pages = document.getElementById('book-pages').value || 250;
             newItem.color = editIndex > -1 ? db.books[editIndex].color : getRandomNaturalColor();
-
             if (editIndex > -1) db.books[editIndex] = newItem;
             else db.books.push(newItem);
+            finishSaving();
         } else {
             newItem.genre = document.getElementById('movie-genre').value;
             const fileInput = document.getElementById('movie-file');
-
+            
             if (fileInput.files && fileInput.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -512,31 +523,29 @@
                     finishSaving();
                 };
                 reader.readAsDataURL(fileInput.files[0]);
-                return;
             } else {
-                newItem.img = editIndex > -1 ? db.movies[editIndex].img : 'https://via.placeholder.com/150?text=Poster';
+                newItem.img = editIndex > -1 ? db.movies[editIndex].img : 'placeholder';
                 if (editIndex > -1) db.movies[editIndex] = newItem;
                 else db.movies.push(newItem);
+                finishSaving();
             }
         }
-        finishSaving();
     }
 
     function finishSaving() {
         saveDB();
         renderShelves();
         closeModal();
-        showToast("컬렉션에 안전하게 저장되었습니다! 🌿");
+        showToast("기록이 저장되었습니다! 🌿");
     }
 
     function deleteItem() {
-        if (confirm("정말 이 소중한 기록을 지울까요?")) {
+        if (confirm("정말 삭제하시겠습니까?")) {
             const list = currentModalType === 'book' ? 'books' : 'movies';
             db[list].splice(editIndex, 1);
             saveDB();
             renderShelves();
             closeModal();
-            showToast("기록이 삭제되었습니다.");
         }
     }
 
@@ -555,23 +564,24 @@
         const mShelf = document.getElementById('movie-shelf');
         mShelf.innerHTML = db.movies.length ? db.movies.map((m, i) => `
             <div class="lp-item" onclick="openEditModal('movie', ${i})" title="${m.title}">
-                <div class="lp-case"><img src="${m.img}" onerror="this.src='https://via.placeholder.com/150?text=Poster'"></div>
+                <div class="lp-case">
+                    ${renderImageWithFallback(m.img, 'movie', '🎞️')}
+                </div>
                 <div class="lp-disc"></div>
             </div>
         `).join('') : `<div style="padding:40px; color:rgba(255,255,255,0.1); font-weight:bold">진열대가 비어있습니다.</div>`;
     }
 
-    // --- Recommendation Logic ---
     const REC_POOL = {
         book: [
-            { title: "조화로운 삶", genre: "인문/사회", aggro: "도시의 소음에 지친 당신, 진정한 평온을 찾고 싶다면 이 책을 펼치세요. 인생의 속도가 바뀝니다.", img: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300" },
-            { title: "초록의 힘", genre: "자기계발", aggro: "당신의 창가에 놓인 식물이 사실 성공의 열쇠였다면? 환경이 사람을 바꿉니다.", img: "https://images.unsplash.com/photo-1589998059171-988d887df646?w=300" },
-            { title: "침묵의 봄", genre: "인문/사회", aggro: "우리가 몰랐던 자연의 경고. 이 책을 읽고 나면 아침에 들리는 새소리가 다르게 느껴질 겁니다.", img: "https://images.unsplash.com/photo-1474932430478-367dbb6832c1?w=300" }
+            { title: "조화로운 삶", genre: "인문/사회", aggro: "도시의 소음에 지친 당신, 진정한 평온을 찾고 싶다면 이 책을 펼치세요.", img: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300", emoji: '📖' },
+            { title: "초록의 힘", genre: "자기계발", aggro: "당신의 창가에 놓인 식물이 사실 성공의 열쇠였다면? 환경이 사람을 바꿉니다.", img: "https://images.unsplash.com/photo-1589998059171-988d887df646?w=300", emoji: '🌿' },
+            { title: "침묵의 봄", genre: "인문/사회", aggro: "우리가 몰랐던 자연의 경고. 아침에 들리는 새소리가 다르게 느껴질 겁니다.", img: "https://images.unsplash.com/photo-1474932430478-367dbb6832c1?w=300", emoji: '🍃' }
         ],
         movie: [
-            { title: "리틀 포레스트", genre: "드라마/코미디", aggro: "지금 당장 짐 싸서 떠나고 싶게 만드는 영화! 배고플 때 보면 위험한 힐링 영상미.", img: "https://images.unsplash.com/photo-1505230833350-732ce12b513c?w=300" },
-            { title: "월-E", genre: "애니메이션", aggro: "황폐해진 지구에서 발견한 단 하나의 초록색 새싹... 인류의 마지막 희망을 지켜낼 수 있을까요?", img: "https://images.unsplash.com/photo-1518384401463-d3876163c195?w=300" },
-            { title: "미나리", genre: "드라마", aggro: "어디서든 잘 자라는 미나리처럼, 끈질기고 아름다운 가족의 생명력을 경험하세요.", img: "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=300" }
+            { title: "리틀 포레스트", genre: "드라마/코미디", aggro: "지금 당장 짐 싸서 떠나고 싶게 만드는 영화! 힐링 그 자체.", img: "https://images.unsplash.com/photo-1505230833350-732ce12b513c?w=300", emoji: '🎬' },
+            { title: "월-E", genre: "애니메이션", aggro: "황폐해진 지구에서 발견한 단 하나의 초록색 새싹... 인류의 희망.", img: "https://images.unsplash.com/photo-1518384401463-d3876163c195?w=300", emoji: '🎞️' },
+            { title: "미나리", genre: "드라마", aggro: "어디서든 잘 자라는 미나리처럼, 끈질기고 아름다운 가족의 생명력.", img: "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=300", emoji: '📽️' }
         ]
     };
 
@@ -585,22 +595,24 @@
     function renderRecommendations() {
         const display = document.getElementById('rec-display');
         const userItems = db[recType === 'book' ? 'books' : 'movies'];
-
+        
         if (userItems.length === 0) {
-            display.innerHTML = `<div style="text-align:center; padding:50px; color:#6a8e6a; font-weight:bold">먼저 컬렉션을 채워주세요! <br>그래야 당신의 초록빛 취향을 분석할 수 있답니다.</div>`;
+            display.innerHTML = `<div style="text-align:center; padding:50px; color:#6a8e6a; font-weight:bold">먼저 기록을 남겨주세요! 당신의 취향을 분석중입니다.</div>`;
             return;
         }
 
         const recentGenre = userItems[userItems.length - 1].genre;
-        let picks = REC_POOL[recType].sort(() => 0.5 - Math.random());
+        let picks = [...REC_POOL[recType]].sort(() => 0.5 - Math.random());
 
         display.innerHTML = `
             <div style="margin-bottom:25px; text-align:center; font-weight:900; color:var(--primary-green); font-size:1.2rem;">
-                🌱 당신의 '${recentGenre}' 취향을 닮은 힐링 콘텐츠
+                🌱 '${recentGenre}' 테마의 추천 콘텐츠
             </div>
             ${picks.map(p => `
                 <div class="rec-card">
-                    <img src="${p.img}" alt="recommend">
+                    <div class="img-wrapper">
+                        ${renderImageWithFallback(p.img, recType, p.emoji)}
+                    </div>
                     <div class="rec-body">
                         <div class="rec-aggro">"${p.aggro}"</div>
                         <div class="rec-title">${p.title}</div>

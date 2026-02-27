@@ -87,7 +87,6 @@
             border-left: 5px solid var(--woowa-mint);
         }
 
-        /* 슬림해진 플로팅 대시보드 */
         .floating-dashboard {
             position: absolute;
             top: 15px;
@@ -114,7 +113,6 @@
             pointer-events: auto;
         }
 
-        /* 지도를 가리지 않는 코너 사운드 컨트롤러 */
         .corner-sound-panel {
             position: absolute;
             bottom: 20px;
@@ -185,7 +183,7 @@
             border-radius: 24px;
             padding: 32px;
             width: 90%;
-            max-width: 340px;
+            max-width: 400px;
             text-align: center;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         }
@@ -207,496 +205,609 @@
         .star-spark {
             animation: twinkle 2s infinite ease-in-out;
         }
+
+        .guide-step {
+            display: none;
+        }
+        .guide-step.active {
+            display: block;
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-<div class="max-w-6xl mx-auto">
-    <header class="flex justify-between items-end mb-8">
-        <div>
-            <h1 class="text-4xl font-bold text-[#2AC1BC] tracking-tight">우아한 <span class="text-gray-800">집중 열차</span></h1>
-            <p class="text-gray-500 mt-1">대한민국을 가로지르며 완성하는 나만의 몰입 시간</p>
-        </div>
-        <div id="clock" class="text-2xl font-mono font-medium text-gray-400 bg-white px-4 py-1 rounded-full woowa-shadow">00:00:00</div>
-    </header>
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-end mb-8">
+            <div class="flex items-center gap-4">
+                <div>
+                    <h1 class="text-4xl font-bold text-[#2AC1BC] tracking-tight">우아한 <span class="text-gray-800">집중 열차</span></h1>
+                    <p class="text-gray-500 mt-1">대한민국을 가로지르며 완성하는 나만의 몰입 시간</p>
+                </div>
+                <button id="open-guide-btn" class="mb-1 w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-[#2AC1BC] hover:border-[#2AC1BC] transition-all flex items-center justify-center text-sm font-bold woowa-shadow">?</button>
+            </div>
+            <div id="clock" class="text-2xl font-mono font-medium text-gray-400 bg-white px-4 py-1 rounded-full woowa-shadow">00:00:00</div>
+        </header>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Left Controls -->
-        <div class="lg:col-span-1 space-y-6">
-            <div id="booking-card" class="relative bg-white p-6 rounded-3xl woowa-shadow border border-gray-100 transition-opacity">
-                <div class="locked-overlay">운행 중에는 경로를<br>변경할 수 없습니다</div>
-                <h2 class="text-xl font-bold mb-5 flex items-center gap-2">
-                    <span class="bg-[#2AC1BC] text-white p-1 rounded">🎫</span> 승차권 예매
-                </h2>
-
-                <div class="space-y-4">
-                    <div class="flex gap-4 items-center">
-                        <div class="flex-1">
-                            <label class="block text-xs font-bold text-gray-400 mb-1 uppercase">Starting</label>
-                            <select id="start-station" class="w-full p-3 bg-gray-50 border-b-2 border-gray-100 rounded-t-lg outline-none focus:border-[#2AC1BC] appearance-none">
-                                <option value="">출발역 선택</option>
-                            </select>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Controls -->
+            <div class="lg:col-span-1 space-y-6">
+                <div id="booking-card" class="relative bg-white p-6 rounded-3xl woowa-shadow border border-gray-100 transition-opacity">
+                    <div class="locked-overlay">운행 중에는 경로를<br>변경할 수 없습니다</div>
+                    <h2 class="text-xl font-bold mb-5 flex items-center gap-2">
+                        <span class="bg-[#2AC1BC] text-white p-1 rounded">🎫</span> 승차권 예매
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div class="flex gap-4 items-center">
+                            <div class="flex-1">
+                                <label class="block text-xs font-bold text-gray-400 mb-1 uppercase">Starting</label>
+                                <select id="start-station" class="w-full p-3 bg-gray-50 border-b-2 border-gray-100 rounded-t-lg outline-none focus:border-[#2AC1BC] appearance-none">
+                                    <option value="">출발역 선택</option>
+                                </select>
+                            </div>
+                            <div class="text-gray-300 mt-5">➔</div>
+                            <div class="flex-1">
+                                <label class="block text-xs font-bold text-gray-400 mb-1 uppercase">Destination</label>
+                                <select id="end-station" class="w-full p-3 bg-gray-50 border-b-2 border-gray-100 rounded-t-lg outline-none focus:border-[#2AC1BC] appearance-none">
+                                    <option value="">도착역 선택</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="text-gray-300 mt-5">➔</div>
-                        <div class="flex-1">
-                            <label class="block text-xs font-bold text-gray-400 mb-1 uppercase">Destination</label>
-                            <select id="end-station" class="w-full p-3 bg-gray-50 border-b-2 border-gray-100 rounded-t-lg outline-none focus:border-[#2AC1BC] appearance-none">
-                                <option value="">도착역 선택</option>
-                            </select>
+
+                        <!-- 컴팩트해진 추가 시간 입력란 (지연 시간) -->
+                        <div class="flex items-center justify-between bg-gray-50 px-4 py-3 rounded-2xl border border-gray-100">
+                            <div class="flex flex-col">
+                                <label class="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1">Focus Delay</label>
+                                <span class="text-xs font-bold text-gray-600">열차 지연 시간</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="delay-time" min="0" value="0" step="10" 
+                                    class="w-16 p-2 bg-white border border-gray-200 rounded-xl outline-none focus:border-[#2AC1BC] text-center font-bold text-sm"
+                                    placeholder="0">
+                                <span class="text-xs font-bold text-gray-400">분</span>
+                            </div>
                         </div>
-                    </div>
 
-                    <div id="leg-preview" class="preview-box bg-[#EBFBFA] p-4 rounded-2xl border border-[#2AC1BC]/20 text-center">
-                        <p class="text-sm text-gray-500 mb-1">이번 구간 예상 소요 시간</p>
-                        <p class="text-2xl font-bold text-[#2AC1BC]"><span id="preview-time">0</span>분</p>
-                    </div>
+                        <div id="leg-preview" class="preview-box bg-[#EBFBFA] p-4 rounded-2xl border border-[#2AC1BC]/20 text-center">
+                            <p class="text-sm text-gray-500 mb-1">이번 구간 총 몰입 시간</p>
+                            <p class="text-2xl font-bold text-[#2AC1BC]"><span id="preview-time">0</span>분</p>
+                        </div>
 
-                    <button id="add-leg-btn" class="w-full py-4 bg-gray-50 text-[#2AC1BC] font-bold rounded-xl border-2 border-dashed border-[#2AC1BC] hover:bg-[#EBFBFA] transition-all">
-                        경로 추가 (집중 예약)
+                        <button id="add-leg-btn" class="w-full py-4 bg-gray-50 text-[#2AC1BC] font-bold rounded-xl border-2 border-dashed border-[#2AC1BC] hover:bg-[#EBFBFA] transition-all">
+                            경로 추가 (집중 예약)
+                        </button>
+                    </div>
+                </div>
+
+                <div id="path-card" class="relative bg-white p-6 rounded-3xl woowa-shadow border border-gray-100">
+                    <div class="locked-overlay">운행 중에는 노선을<br>변경할 수 없습니다</div>
+                    <h2 class="text-lg font-bold mb-4 flex justify-between items-center">
+                        <span>나의 몰입 노선</span>
+                        <span id="total-time-display" class="text-[#2AC1BC]">0분</span>
+                    </h2>
+                    <div id="path-list" class="space-y-3 min-h-[120px] max-h-[300px] overflow-y-auto pr-2">
+                        <p class="text-gray-400 text-sm text-center py-10">노선을 추가하여 집중을 시작하세요.</p>
+                    </div>
+                    
+                    <button id="start-focus-btn" class="w-full mt-6 py-5 btn-primary font-bold rounded-2xl text-xl woowa-shadow hidden transform transition-transform hover:scale-[1.02] active:scale-[0.98]">
+                        집중 운행 시작 🚀
                     </button>
                 </div>
             </div>
 
-            <div id="path-card" class="relative bg-white p-6 rounded-3xl woowa-shadow border border-gray-100">
-                <div class="locked-overlay">운행 중에는 노선을<br>변경할 수 없습니다</div>
-                <h2 class="text-lg font-bold mb-4 flex justify-between items-center">
-                    <span>나의 몰입 노선</span>
-                    <span id="total-time-display" class="text-[#2AC1BC]">0분</span>
-                </h2>
-                <div id="path-list" class="space-y-3 min-h-[120px] max-h-[300px] overflow-y-auto pr-2">
-                    <p class="text-gray-400 text-sm text-center py-10">노선을 추가하여 집중을 시작하세요.</p>
-                </div>
-
-                <button id="start-focus-btn" class="w-full mt-6 py-5 btn-primary font-bold rounded-2xl text-xl woowa-shadow hidden transform transition-transform hover:scale-[1.02] active:scale-[0.98]">
-                    집중 운행 시작 🚀
-                </button>
-            </div>
-        </div>
-
-        <!-- Right Map Area -->
-        <div class="lg:col-span-2 space-y-6">
-            <div class="map-container woowa-shadow min-h-[650px]">
-                <!-- Floating Timer Dashboard (Compact) -->
-                <div id="focus-dashboard" class="floating-dashboard woowa-shadow">
-                    <div class="flex items-center gap-6">
-                        <div class="flex flex-col">
-                            <span id="timer-display" class="text-3xl font-mono font-bold text-[#2AC1BC]">00:00</span>
-                            <span id="current-leg-info" class="text-xs font-bold text-gray-500 uppercase tracking-tight">ON-TRACK</span>
+            <!-- Right Map Area -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="map-container woowa-shadow min-h-[650px]">
+                    <div id="focus-dashboard" class="floating-dashboard woowa-shadow">
+                        <div class="flex items-center gap-6">
+                            <div class="flex flex-col">
+                                <span id="timer-display" class="text-3xl font-mono font-bold text-[#2AC1BC]">00:00</span>
+                                <span id="current-leg-info" class="text-xs font-bold text-gray-500 uppercase tracking-tight">ON-TRACK</span>
+                            </div>
+                            <div class="h-8 w-[1px] bg-gray-200"></div>
+                            <div id="progress-bar-bg" class="w-32 md:w-48 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div id="progress-bar" class="bg-[#2AC1BC] h-full w-0 rounded-full transition-all duration-1000"></div>
+                            </div>
                         </div>
-                        <div class="h-8 w-[1px] bg-gray-200"></div>
-                        <div id="progress-bar-bg" class="w-32 md:w-48 h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <div id="progress-bar" class="bg-[#2AC1BC] h-full w-0 rounded-full transition-all duration-1000"></div>
+                        
+                        <div class="flex items-center gap-2">
+                            <button id="pause-focus-btn" class="p-3 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-all flex items-center justify-center w-12 h-12">
+                                <span id="pause-btn-icon">⏸</span>
+                            </button>
+                            <button id="stop-focus-btn" class="p-3 bg-red-50 text-red-500 rounded-full hover:bg-red-100 transition-all border border-red-200 flex items-center justify-center w-12 h-12">
+                                <span>⏹</span>
+                            </button>
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-2">
-                        <button id="pause-focus-btn" class="p-3 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-all flex items-center justify-center w-12 h-12">
-                            <span id="pause-btn-icon">⏸</span>
-                        </button>
-                        <button id="stop-focus-btn" class="p-3 bg-red-50 text-red-500 rounded-full hover:bg-red-100 transition-all border border-red-200 flex items-center justify-center w-12 h-12">
-                            <span>⏹</span>
-                        </button>
+                    <div id="corner-sound-panel" class="corner-sound-panel">
+                        <button data-sound="train" class="sound-btn-mini active" title="기차 소리">🚂</button>
+                        <button data-sound="white" class="sound-btn-mini inactive" title="백색 소음">☁️</button>
+                        <button data-sound="mute" class="sound-btn-mini inactive" title="음소거">🔇</button>
                     </div>
+
+                    <div id="trip-status" class="absolute top-6 z-10 bg-white/90 px-6 py-2 rounded-full font-bold text-gray-700 woowa-shadow border border-[#2AC1BC]/20">
+                        지도에서 역을 선택하거나 좌측에서 예매하세요
+                    </div>
+                    
+                    <svg id="korea-map" viewBox="0 0 400 600" class="w-full max-w-[450px] h-auto drop-shadow-2xl">
+                        <path id="korea-outline" d="M145,55 C160,45 190,40 210,42 C230,45 250,55 265,70 C280,85 290,110 295,130 C300,150 315,180 325,210 C335,240 340,280 338,310 C335,340 320,380 310,410 C300,440 295,480 285,510 C275,540 240,560 210,565 C180,570 140,560 110,540 C80,520 60,480 55,440 C50,400 65,340 60,300 C55,260 50,220 52,180 C55,140 70,100 100,75 C120,60 135,60 145,55 Z" fill="#FFFFFF" stroke="#2AC1BC" stroke-width="3" />
+                        <circle cx="160" cy="585" r="15" fill="#FFFFFF" stroke="#2AC1BC" stroke-width="2" />
+                        <circle cx="360" cy="180" r="4" fill="#FFFFFF" stroke="#2AC1BC" stroke-width="1" />
+                        <circle cx="380" cy="185" r="2" fill="#FFFFFF" stroke="#2AC1BC" stroke-width="1" />
+                        <path id="active-path" fill="none" stroke="#2AC1BC" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" class="path-line" d=""></path>
+                        <g id="stations-layer"></g>
+
+                        <g id="moving-object" transform="translate(-100, -100)">
+                            <path class="star-spark" d="M-28,-22 L-23,-15 L-15,-10 L-23,-5 L-28,2 L-33,-5 L-41,-10 L-33,-15 Z" fill="#2AC1BC" stroke="black" stroke-width="2" />
+                            <circle cx="0" cy="0" r="22" fill="white" stroke="black" stroke-width="3" />
+                            <ellipse cx="0" cy="3" rx="35" ry="11" fill="none" stroke="black" stroke-width="3" transform="rotate(-15)" />
+                            <circle cx="-8" cy="-3" r="2.2" fill="black" />
+                            <circle cx="8" cy="-3" r="2.2" fill="black" />
+                            <circle cx="0" cy="5" r="1.5" fill="black" />
+                            <path d="M-20,12 L20,12 L26,38 L-26,38 Z" fill="white" stroke="black" stroke-width="3" />
+                            <line x1="-16" y1="26" x2="16" y2="26" stroke="black" stroke-width="2" />
+                            <path d="M-15,10 Q-22,25 -18,30" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" />
+                            <path d="M15,10 Q(22,25 18,30" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" />
+                        </g>
+                    </svg>
                 </div>
 
-                <!-- Corner Sound Panel -->
-                <div id="corner-sound-panel" class="corner-sound-panel">
-                    <button data-sound="train" class="sound-btn-mini active" title="기차 소리">🚂</button>
-                    <button data-sound="white" class="sound-btn-mini inactive" title="백색 소음">☁️</button>
-                    <button data-sound="mute" class="sound-btn-mini inactive" title="음소거">🔇</button>
-                </div>
-
-                <div id="trip-status" class="absolute top-6 z-10 bg-white/90 px-6 py-2 rounded-full font-bold text-gray-700 woowa-shadow border border-[#2AC1BC]/20">
-                    지도에서 역을 선택하거나 좌측에서 예매하세요
-                </div>
-
-                <svg id="korea-map" viewBox="0 0 400 600" class="w-full max-w-[450px] h-auto drop-shadow-2xl">
-                    <path id="korea-outline" d="M145,55 C160,45 190,40 210,42 C230,45 250,55 265,70 C280,85 290,110 295,130 C300,150 315,180 325,210 C335,240 340,280 338,310 C335,340 320,380 310,410 C300,440 295,480 285,510 C275,540 240,560 210,565 C180,570 140,560 110,540 C80,520 60,480 55,440 C50,400 65,340 60,300 C55,260 50,220 52,180 C55,140 70,100 100,75 C120,60 135,60 145,55 Z" fill="#FFFFFF" stroke="#2AC1BC" stroke-width="3" />
-                    <circle cx="160" cy="585" r="15" fill="#FFFFFF" stroke="#2AC1BC" stroke-width="2" />
-                    <circle cx="360" cy="180" r="4" fill="#FFFFFF" stroke="#2AC1BC" stroke-width="1" />
-                    <circle cx="380" cy="185" r="2" fill="#FFFFFF" stroke="#2AC1BC" stroke-width="1" />
-                    <path id="active-path" fill="none" stroke="#2AC1BC" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" class="path-line" d=""></path>
-                    <g id="stations-layer"></g>
-
-                    <!-- 노트북 행성 캐릭터 -->
-                    <g id="moving-object" transform="translate(-100, -100)">
-                        <path class="star-spark" d="M-28,-22 L-23,-15 L-15,-10 L-23,-5 L-28,2 L-33,-5 L-41,-10 L-33,-15 Z" fill="#2AC1BC" stroke="black" stroke-width="2" />
-                        <circle cx="0" cy="0" r="22" fill="white" stroke="black" stroke-width="3" />
-                        <ellipse cx="0" cy="3" rx="35" ry="11" fill="none" stroke="black" stroke-width="3" transform="rotate(-15)" />
-                        <circle cx="-8" cy="-3" r="2.2" fill="black" />
-                        <circle cx="8" cy="-3" r="2.2" fill="black" />
-                        <circle cx="0" cy="5" r="1.5" fill="black" />
-                        <path d="M-20,12 L20,12 L26,38 L-26,38 Z" fill="white" stroke="black" stroke-width="3" />
-                        <line x1="-16" y1="26" x2="16" y2="26" stroke="black" stroke-width="2" />
-                        <path d="M-15,10 Q-22,25 -18,30" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" />
-                        <path d="M15,10 Q(22,25 18,30" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" />
-                    </g>
-                </svg>
-            </div>
-
-            <div class="bg-white p-6 rounded-3xl woowa-shadow border border-gray-100">
-                <h2 class="text-lg font-bold mb-4">최근 몰입 완료 기록</h2>
-                <div id="history-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <p class="col-span-2 text-gray-400 text-sm italic py-4">아직 완료된 여정이 없습니다.</p>
+                <div class="bg-white p-6 rounded-3xl woowa-shadow border border-gray-100">
+                    <h2 class="text-lg font-bold mb-4">최근 몰입 완료 기록</h2>
+                    <div id="history-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <p class="col-span-2 text-gray-400 text-sm italic py-4">아직 완료된 여정이 없습니다.</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- 커스텀 초기화 모달 -->
-<div id="reset-modal" class="modal-backdrop">
-    <div class="modal-content woowa-shadow">
-        <h3 class="text-xl font-bold mb-2">운행을 종료할까요?</h3>
-        <p class="text-gray-500 mb-8 text-sm leading-relaxed">진행 중인 집중 기록과 예약 노선이<br>모두 초기화됩니다.</p>
-        <div class="flex gap-3">
-            <button id="modal-cancel-btn" class="flex-1 py-3 bg-gray-100 text-gray-500 font-bold rounded-xl hover:bg-gray-200 transition-colors">취소</button>
-            <button id="modal-confirm-btn" class="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors">초기화</button>
+    <!-- 운행 종료 모달 -->
+    <div id="reset-modal" class="modal-backdrop">
+        <div class="modal-content woowa-shadow">
+            <h3 class="text-xl font-bold mb-2">운행을 종료할까요?</h3>
+            <p class="text-gray-500 mb-8 text-sm leading-relaxed">진행 중인 집중 기록과 예약 노선이<br>모두 초기화됩니다.</p>
+            <div class="flex gap-3">
+                <button id="modal-cancel-btn" class="flex-1 py-3 bg-gray-100 text-gray-500 font-bold rounded-xl hover:bg-gray-200 transition-colors">취소</button>
+                <button id="modal-confirm-btn" class="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors">초기화</button>
+            </div>
         </div>
     </div>
-</div>
 
-<div id="audio-hint" class="fixed bottom-6 right-6 bg-gray-800 text-white px-6 py-3 rounded-2xl text-sm font-medium woowa-shadow animate-bounce cursor-pointer z-50">
-    🔊 사운드 활성화 (클릭)
-</div>
+    <!-- 이용 가이드 모달 -->
+    <div id="guide-modal" class="modal-backdrop" style="display: flex;">
+        <div class="modal-content woowa-shadow max-w-[450px] !text-left relative">
+            <button id="close-guide-btn" class="absolute top-6 right-6 text-gray-300 hover:text-gray-500 text-2xl">✕</button>
+            
+            <div id="step-1" class="guide-step active animate-fadeIn">
+                <div class="w-12 h-12 bg-[#EBFBFA] text-[#2AC1BC] rounded-2xl flex items-center justify-center text-2xl mb-6">🎫</div>
+                <h3 class="text-2xl font-bold mb-3">나만의 몰입 노선 짜기</h3>
+                <p class="text-gray-500 text-sm leading-relaxed mb-6">
+                    지도를 클릭하거나 예매창에서 출발지와 도착지를 선택하세요. <b>구간별 실제 이동 시간</b>에 <b>추가 지연 시간</b>을 더해 여러분의 <b>집중 시간</b>을 자유롭게 늘릴 수 있어요.
+                </p>
+                <button class="next-step-btn w-full py-4 bg-[#2AC1BC] text-white font-bold rounded-xl hover:opacity-90">다음으로</button>
+            </div>
 
-<script>
-    const STATIONS = [
-        { id: 'seoul', name: '서울', x: 135, y: 130 },
-        { id: 'gangneung', name: '강릉', x: 260, y: 110 },
-        { id: 'daejeon', name: '대전', x: 165, y: 260 },
-        { id: 'daegu', name: '대구', x: 250, y: 350 },
-        { id: 'gwangju', name: '광주', x: 110, y: 420 },
-        { id: 'busan', name: '부산', x: 285, y: 460 },
-        { id: 'ulsan', name: '울산', x: 300, y: 410 },
-        { id: 'mokpo', name: '목포', x: 75, y: 480 },
-        { id: 'jeju', name: '제주', x: 160, y: 585 }
-    ];
+            <div id="step-2" class="guide-step animate-fadeIn">
+                <div class="w-12 h-12 bg-[#EBFBFA] text-[#2AC1BC] rounded-2xl flex items-center justify-center text-2xl mb-6">🎧</div>
+                <h3 class="text-2xl font-bold mb-3">몰입을 돕는 ASMR</h3>
+                <p class="text-gray-500 text-sm leading-relaxed mb-6">
+                    운행이 시작되면 오른쪽 하단에서 배경음을 선택할 수 있습니다.<br><br>
+                    기차의 규칙적인 진동음이나 백색 소음은 주변 소음을 차단하고 깊은 몰입을 도와줍니다.
+                </p>
+                <button class="next-step-btn w-full py-4 bg-[#2AC1BC] text-white font-bold rounded-xl hover:opacity-90">다음으로</button>
+            </div>
 
-    const TRAVEL_TIMES = {
-        'seoul-daejeon': 60, 'seoul-daegu': 100, 'seoul-busan': 150, 'seoul-gwangju': 110, 'seoul-mokpo': 140, 'seoul-gangneung': 110, 'seoul-ulsan': 130, 'seoul-jeju': 210,
-        'daejeon-seoul': 60, 'daejeon-daegu': 45, 'daejeon-busan': 90, 'daejeon-gwangju': 45, 'daejeon-mokpo': 85, 'daejeon-gangneung': 150, 'daejeon-ulsan': 75, 'daejeon-jeju': 160,
-        'daegu-seoul': 100, 'daegu-daejeon': 45, 'daegu-busan': 45, 'daegu-gwangju': 120, 'daegu-mokpo': 160, 'daegu-gangneung': 180, 'daegu-ulsan': 25, 'daegu-jeju': 130,
-        'busan-seoul': 150, 'busan-daejeon': 90, 'busan-daegu': 45, 'busan-gwangju': 180, 'busan-mokpo': 210, 'busan-gangneung': 240, 'busan-ulsan': 25, 'busan-jeju': 110,
-        'gwangju-seoul': 110, 'gwangju-daejeon': 45, 'gwangju-daegu': 120, 'gwangju-busan': 180, 'gwangju-mokpo': 35, 'gwangju-gangneung': 220, 'gwangju-ulsan': 150, 'gwangju-jeju': 90,
-        'mokpo-seoul': 140, 'mokpo-daejeon': 85, 'mokpo-daegu': 160, 'mokpo-busan': 210, 'mokpo-gwangju': 35, 'mokpo-gangneung': 250, 'mokpo-ulsan': 190, 'mokpo-jeju': 60,
-        'ulsan-seoul': 130, 'ulsan-daejeon': 75, 'ulsan-daegu': 25, 'ulsan-busan': 25, 'ulsan-gwangju': 150, 'ulsan-mokpo': 190, 'ulsan-gangneung': 200, 'ulsan-jeju': 100,
-        'gangneung-seoul': 110, 'gangneung-daejeon': 150, 'gangneung-daegu': 180, 'gangneung-busan': 240, 'gangneung-gwangju': 220, 'gangneung-mokpo': 250, 'gangneung-ulsan': 200, 'gangneung-jeju': 240,
-        'jeju-seoul': 210, 'jeju-daejeon': 160, 'jeju-daegu': 130, 'jeju-busan': 110, 'jeju-gwangju': 90, 'jeju-mokpo': 60, 'jeju-ulsan': 100, 'jeju-gangneung': 240
-    };
+            <div id="step-3" class="guide-step animate-fadeIn">
+                <div class="w-12 h-12 bg-[#EBFBFA] text-[#2AC1BC] rounded-2xl flex items-center justify-center text-2xl mb-6">🚀</div>
+                <h3 class="text-2xl font-bold mb-3">운행 중 몰입 지키기</h3>
+                <p class="text-gray-500 text-sm leading-relaxed mb-6">
+                    '운행 시작'을 누르면 열차가 출발하며 타이머가 작동합니다. 운행 중에는 노선을 변경할 수 없으니, <b>목적지에 도착할 때까지 몰입을 유지하세요!</b>
+                </p>
+                <button id="start-app-btn" class="w-full py-4 bg-[#2AC1BC] text-white font-bold rounded-xl hover:opacity-90">몰입 시작하기</button>
+            </div>
 
-    const DEFAULT_TIME = 30;
+            <div class="mt-8 flex justify-center gap-2">
+                <div class="step-indicator w-2 h-2 rounded-full bg-[#2AC1BC]"></div>
+                <div class="step-indicator w-2 h-2 rounded-full bg-gray-200"></div>
+                <div class="step-indicator w-2 h-2 rounded-full bg-gray-200"></div>
+            </div>
+        </div>
+    </div>
 
-    let selectedPath = [];
-    let isFocusing = false;
-    let isPaused = false;
-    let timerInterval = null;
-    let totalSecondsRemaining = 0;
-    let initialTotalSeconds = 0;
-    let history = [];
-    let selectedSound = 'train';
+    <div id="audio-hint" class="fixed bottom-6 right-6 bg-gray-800 text-white px-6 py-3 rounded-2xl text-sm font-medium woowa-shadow animate-bounce cursor-pointer z-50">
+        🔊 사운드 활성화 (클릭)
+    </div>
 
-    const AudioCtrl = (() => {
-        let ctx = null;
-        let ambientSource = null;
-        let ambientGain = null;
+    <script>
+        const STATIONS = [
+            { id: 'seoul', name: '서울', x: 135, y: 130 },
+            { id: 'gangneung', name: '강릉', x: 260, y: 110 },
+            { id: 'daejeon', name: '대전', x: 165, y: 260 },
+            { id: 'daegu', name: '대구', x: 250, y: 350 },
+            { id: 'gwangju', name: '광주', x: 110, y: 420 },
+            { id: 'busan', name: '부산', x: 285, y: 460 },
+            { id: 'ulsan', name: '울산', x: 300, y: 410 },
+            { id: 'mokpo', name: '목포', x: 75, y: 480 },
+            { id: 'jeju', name: '제주', x: 160, y: 585 }
+        ];
 
-        const init = () => { if(!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); };
-
-        const createNoiseBuffer = () => {
-            const bufferSize = 2 * ctx.sampleRate,
-                buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate),
-                output = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
-            return buffer;
+        const TRAVEL_TIMES = {
+            'seoul-daejeon': 60, 'seoul-daegu': 100, 'seoul-busan': 150, 'seoul-gwangju': 110, 'seoul-mokpo': 140, 'seoul-gangneung': 110, 'seoul-ulsan': 130, 'seoul-jeju': 210,
+            'daejeon-seoul': 60, 'daejeon-daegu': 45, 'daejeon-busan': 90, 'daejeon-gwangju': 45, 'daejeon-mokpo': 85, 'daejeon-gangneung': 150, 'daejeon-ulsan': 75, 'daejeon-jeju': 160,
+            'daegu-seoul': 100, 'daegu-daejeon': 45, 'daegu-busan': 45, 'daegu-gwangju': 120, 'daegu-mokpo': 160, 'daegu-gangneung': 180, 'daegu-ulsan': 25, 'daegu-jeju': 130,
+            'busan-seoul': 150, 'busan-daejeon': 90, 'busan-daegu': 45, 'busan-gwangju': 180, 'busan-mokpo': 210, 'busan-gangneung': 240, 'busan-ulsan': 25, 'busan-jeju': 110,
+            'gwangju-seoul': 110, 'gwangju-daejeon': 45, 'gwangju-daegu': 120, 'gwangju-busan': 180, 'gwangju-mokpo': 35, 'gwangju-gangneung': 220, 'gwangju-ulsan': 150, 'gwangju-jeju': 90,
+            'mokpo-seoul': 140, 'mokpo-daejeon': 85, 'mokpo-daegu': 160, 'mokpo-busan': 210, 'mokpo-gwangju': 35, 'mokpo-gangneung': 250, 'mokpo-ulsan': 190, 'mokpo-jeju': 60,
+            'ulsan-seoul': 130, 'ulsan-daejeon': 75, 'ulsan-daegu': 25, 'ulsan-busan': 25, 'ulsan-gwangju': 150, 'ulsan-mokpo': 190, 'ulsan-gangneung': 200, 'ulsan-jeju': 100,
+            'gangneung-seoul': 110, 'gangneung-daejeon': 150, 'gangneung-daegu': 180, 'gangneung-busan': 240, 'gangneung-gwangju': 220, 'gangneung-mokpo': 250, 'gangneung-ulsan': 200, 'gangneung-jeju': 240,
+            'jeju-seoul': 210, 'jeju-daejeon': 160, 'jeju-daegu': 130, 'jeju-busan': 110, 'jeju-gwangju': 90, 'jeju-mokpo': 60, 'jeju-ulsan': 100, 'jeju-gangneung': 240
         };
 
-        const playTone = (freq, type, duration, volume = 0.1) => {
-            init();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, ctx.currentTime);
-            gain.gain.setValueAtTime(volume, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start();
-            osc.stop(ctx.currentTime + duration);
-        };
+        const DEFAULT_TIME = 30;
 
-        const startAmbient = (type) => {
-            init();
-            stopAmbient();
-            if (type === 'mute') return;
+        let selectedPath = [];
+        let isFocusing = false;
+        let isPaused = false;
+        let timerInterval = null;
+        let totalSecondsRemaining = 0;
+        let initialTotalSeconds = 0;
+        let history = [];
+        let selectedSound = 'train';
+        let currentGuideStep = 1;
 
-            ambientGain = ctx.createGain();
-            ambientGain.gain.setValueAtTime(0, ctx.currentTime);
-            ambientGain.gain.linearRampToValueAtTime(isPaused ? 0 : 0.4, ctx.currentTime + 1);
+        const AudioCtrl = (() => {
+            let ctx = null;
+            let ambientSource = null;
+            let ambientGain = null;
 
-            const source = ctx.createBufferSource();
-            source.buffer = createNoiseBuffer();
-            source.loop = true;
+            const init = () => { if(!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); };
 
-            const filter = ctx.createBiquadFilter();
-
-            if (type === 'train') {
-                // 기차 소리: 저주파 로우패스 (웅웅거리는 소리)
-                filter.type = 'lowpass';
-                filter.frequency.setValueAtTime(120, ctx.currentTime);
-                const createClack = () => {
-                    if (!isFocusing || isPaused || selectedSound !== 'train') return;
-                    const now = ctx.currentTime;
-                    ambientGain.gain.setTargetAtTime(0.6, now, 0.05);
-                    ambientGain.gain.setTargetAtTime(0.4, now + 0.15, 0.1);
-                    setTimeout(createClack, 1800);
-                };
-                createClack();
-            } else {
-                // 백색 소음: 부드러운 중고역대 로우패스 (치- 하는 소리)
-                filter.type = 'lowpass';
-                filter.frequency.setValueAtTime(1500, ctx.currentTime);
-            }
-
-            source.connect(filter);
-            filter.connect(ambientGain);
-            ambientGain.connect(ctx.destination);
-            source.start();
-            ambientSource = source;
-        };
-
-        const stopAmbient = () => {
-            if (ambientGain) {
-                ambientGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
-                const oldSource = ambientSource;
-                setTimeout(() => { if (oldSource) oldSource.stop(); }, 500);
-            }
-        };
-
-        const setVolume = (v) => { if (ambientGain) ambientGain.gain.setTargetAtTime(v, ctx.currentTime, 0.1); };
-
-        return {
-            playDeparture: () => { init(); playTone(440, 'sine', 1, 0.2); setTimeout(() => playTone(554, 'sine', 1, 0.2), 200); },
-            playArrival: () => { init(); [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => playTone(f, 'square', 0.6, 0.05), i * 150)); },
-            startAmbient,
-            stopAmbient,
-            setVolume,
-            resume: () => { if(ctx && ctx.state === 'suspended') ctx.resume(); }
-        };
-    })();
-
-    const startSelect = document.getElementById('start-station');
-    const endSelect = document.getElementById('end-station');
-    const activePathLine = document.getElementById('active-path');
-    const movingObject = document.getElementById('moving-object');
-    const pathListEl = document.getElementById('path-list');
-    const totalTimeDisplay = document.getElementById('total-time-display');
-    const startFocusBtn = document.getElementById('start-focus-btn');
-    const timerDisplay = document.getElementById('timer-display');
-    const progressBar = document.getElementById('progress-bar');
-    const focusDashboard = document.getElementById('focus-dashboard');
-    const cornerSoundPanel = document.getElementById('corner-sound-panel');
-    const tripStatus = document.getElementById('trip-status');
-    const bookingCard = document.getElementById('booking-card');
-    const pathCard = document.getElementById('path-card');
-    const resetModal = document.getElementById('reset-modal');
-
-    function init() {
-        STATIONS.forEach(s => {
-            startSelect.add(new Option(s.name, s.id));
-            endSelect.add(new Option(s.name, s.id));
-            const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            group.setAttribute('class', 'station-node');
-            group.onclick = () => handleStationClick(s.id);
-            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            circle.setAttribute('cx', s.x); circle.setAttribute('cy', s.y); circle.setAttribute('r', 5);
-            circle.setAttribute('fill', '#CBD5E0'); circle.setAttribute('stroke', 'white'); circle.setAttribute('stroke-width', '2');
-            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            text.setAttribute('x', s.x + 8); text.setAttribute('y', s.y + 4); text.setAttribute('font-size', '11');
-            text.setAttribute('font-weight', '700'); text.setAttribute('fill', '#4A5568'); text.textContent = s.name;
-            group.appendChild(circle); group.appendChild(text);
-            document.getElementById('stations-layer').appendChild(group);
-        });
-
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('clock').textContent = now.toLocaleTimeString('ko-KR', { hour12: false });
-        }, 1000);
-
-        document.getElementById('add-leg-btn').onclick = addLeg;
-        startFocusBtn.onclick = startFocus;
-        document.getElementById('stop-focus-btn').onclick = () => resetModal.style.display = 'flex';
-        document.getElementById('modal-cancel-btn').onclick = () => resetModal.style.display = 'none';
-        document.getElementById('modal-confirm-btn').onclick = () => { resetModal.style.display = 'none'; resetToMain(); };
-        document.getElementById('pause-focus-btn').onclick = togglePause;
-        startSelect.onchange = updateLegPreview;
-        endSelect.onchange = updateLegPreview;
-
-        document.querySelectorAll('.sound-btn-mini').forEach(btn => {
-            btn.onclick = (e) => {
-                document.querySelectorAll('.sound-btn-mini').forEach(b => b.classList.replace('active', 'inactive'));
-                btn.classList.replace('inactive', 'active');
-                selectedSound = btn.dataset.sound;
-                if (isFocusing) AudioCtrl.startAmbient(selectedSound);
+            const createNoiseBuffer = () => {
+                const bufferSize = 2 * ctx.sampleRate,
+                      buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate),
+                      output = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
+                return buffer;
             };
-        });
 
-        document.body.onclick = () => { AudioCtrl.resume(); document.getElementById('audio-hint').classList.add('hidden'); };
-    }
+            const playTone = (freq, type, duration, volume = 0.1) => {
+                init();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                gain.gain.setValueAtTime(volume, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + duration);
+            };
 
-    function togglePause() {
-        if (!isFocusing) return;
-        isPaused = !isPaused;
-        const btnIcon = document.getElementById('pause-btn-icon');
-        if (isPaused) {
-            btnIcon.textContent = "▶";
-            AudioCtrl.setVolume(0);
-        } else {
-            btnIcon.textContent = "⏸";
-            AudioCtrl.setVolume(0.4);
+            const startAmbient = (type) => {
+                init();
+                stopAmbient();
+                if (type === 'mute') return;
+
+                ambientGain = ctx.createGain();
+                ambientGain.gain.setValueAtTime(0, ctx.currentTime);
+                ambientGain.gain.linearRampToValueAtTime(isPaused ? 0 : 0.4, ctx.currentTime + 1);
+
+                const source = ctx.createBufferSource();
+                source.buffer = createNoiseBuffer();
+                source.loop = true;
+
+                const filter = ctx.createBiquadFilter();
+                
+                if (type === 'train') {
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(120, ctx.currentTime);
+                    const createClack = () => {
+                        if (!isFocusing || isPaused || selectedSound !== 'train') return;
+                        const now = ctx.currentTime;
+                        ambientGain.gain.setTargetAtTime(0.6, now, 0.05);
+                        ambientGain.gain.setTargetAtTime(0.4, now + 0.15, 0.1);
+                        setTimeout(createClack, 1800);
+                    };
+                    createClack();
+                } else {
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(1500, ctx.currentTime);
+                }
+
+                source.connect(filter);
+                filter.connect(ambientGain);
+                ambientGain.connect(ctx.destination);
+                source.start();
+                ambientSource = source;
+            };
+
+            const stopAmbient = () => {
+                if (ambientGain) {
+                    ambientGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
+                    const oldSource = ambientSource;
+                    setTimeout(() => { if (oldSource) oldSource.stop(); }, 500);
+                }
+            };
+
+            const setVolume = (v) => { if (ambientGain) ambientGain.gain.setTargetAtTime(v, ctx.currentTime, 0.1); };
+
+            return {
+                playDeparture: () => { init(); playTone(440, 'sine', 1, 0.2); setTimeout(() => playTone(554, 'sine', 1, 0.2), 200); },
+                playArrival: () => { init(); [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => playTone(f, 'square', 0.6, 0.05), i * 150)); },
+                startAmbient,
+                stopAmbient,
+                setVolume,
+                resume: () => { if(ctx && ctx.state === 'suspended') ctx.resume(); }
+            };
+        })();
+
+        const startSelect = document.getElementById('start-station');
+        const endSelect = document.getElementById('end-station');
+        const delayInput = document.getElementById('delay-time');
+        const activePathLine = document.getElementById('active-path');
+        const movingObject = document.getElementById('moving-object');
+        const pathListEl = document.getElementById('path-list');
+        const totalTimeDisplay = document.getElementById('total-time-display');
+        const startFocusBtn = document.getElementById('start-focus-btn');
+        const timerDisplay = document.getElementById('timer-display');
+        const progressBar = document.getElementById('progress-bar');
+        const focusDashboard = document.getElementById('focus-dashboard');
+        const cornerSoundPanel = document.getElementById('corner-sound-panel');
+        const tripStatus = document.getElementById('trip-status');
+        const bookingCard = document.getElementById('booking-card');
+        const pathCard = document.getElementById('path-card');
+        const resetModal = document.getElementById('reset-modal');
+        const guideModal = document.getElementById('guide-modal');
+
+        function init() {
+            STATIONS.forEach(s => {
+                startSelect.add(new Option(s.name, s.id));
+                endSelect.add(new Option(s.name, s.id));
+                const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                group.setAttribute('class', 'station-node');
+                group.onclick = () => handleStationClick(s.id);
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute('cx', s.x); circle.setAttribute('cy', s.y); circle.setAttribute('r', 5);
+                circle.setAttribute('fill', '#CBD5E0'); circle.setAttribute('stroke', 'white'); circle.setAttribute('stroke-width', '2');
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute('x', s.x + 8); text.setAttribute('y', s.y + 4); text.setAttribute('font-size', '11');
+                text.setAttribute('font-weight', '700'); text.setAttribute('fill', '#4A5568'); text.textContent = s.name;
+                group.appendChild(circle); group.appendChild(text);
+                document.getElementById('stations-layer').appendChild(group);
+            });
+
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('clock').textContent = now.toLocaleTimeString('ko-KR', { hour12: false });
+            }, 1000);
+
+            document.getElementById('add-leg-btn').onclick = addLeg;
+            startFocusBtn.onclick = startFocus;
+            document.getElementById('stop-focus-btn').onclick = () => resetModal.style.display = 'flex';
+            document.getElementById('modal-cancel-btn').onclick = () => resetModal.style.display = 'none';
+            document.getElementById('modal-confirm-btn').onclick = () => { resetModal.style.display = 'none'; resetToMain(); };
+            document.getElementById('pause-focus-btn').onclick = togglePause;
+            
+            startSelect.onchange = updateLegPreview;
+            endSelect.onchange = updateLegPreview;
+            delayInput.oninput = updateLegPreview;
+
+            document.getElementById('open-guide-btn').onclick = () => { currentGuideStep = 1; updateGuideUI(); guideModal.style.display = 'flex'; };
+            document.getElementById('close-guide-btn').onclick = () => guideModal.style.display = 'none';
+            document.getElementById('start-app-btn').onclick = () => guideModal.style.display = 'none';
+            document.querySelectorAll('.next-step-btn').forEach(btn => {
+                btn.onclick = () => { currentGuideStep++; updateGuideUI(); };
+            });
+
+            document.querySelectorAll('.sound-btn-mini').forEach(btn => {
+                btn.onclick = (e) => {
+                    document.querySelectorAll('.sound-btn-mini').forEach(b => b.classList.replace('active', 'inactive'));
+                    btn.classList.replace('inactive', 'active');
+                    selectedSound = btn.dataset.sound;
+                    if (isFocusing) AudioCtrl.startAmbient(selectedSound);
+                };
+            });
+
+            document.body.onclick = () => { AudioCtrl.resume(); document.getElementById('audio-hint').classList.add('hidden'); };
         }
-    }
 
-    function updateLegPreview() {
-        if (isFocusing) return;
-        const fromId = startSelect.value;
-        const toId = endSelect.value;
-        if (fromId && toId && fromId !== toId) {
-            document.getElementById('preview-time').textContent = TRAVEL_TIMES[`${fromId}-${toId}`] || DEFAULT_TIME;
-            document.getElementById('leg-preview').classList.add('active');
-        } else { document.getElementById('leg-preview').classList.remove('active'); }
-    }
-
-    function handleStationClick(id) {
-        if (isFocusing) return;
-        if (!startSelect.value) { startSelect.value = id; }
-        else if (startSelect.value !== id) { endSelect.value = id; }
-        updateLegPreview();
-    }
-
-    function addLeg() {
-        if (isFocusing) return;
-        const fromId = startSelect.value, toId = endSelect.value;
-        if (!fromId || !toId || fromId === toId) return;
-        const fromS = STATIONS.find(s => s.id === fromId), toS = STATIONS.find(s => s.id === toId);
-        selectedPath.push({ from: fromS, to: toS, duration: TRAVEL_TIMES[`${fromId}-${toId}`] || DEFAULT_TIME });
-        startSelect.value = toId; endSelect.value = "";
-        renderPath(); updateLegPreview();
-    }
-
-    function renderPath() {
-        pathListEl.innerHTML = "";
-        let total = 0, pathD = "";
-        if (selectedPath.length === 0) {
-            pathListEl.innerHTML = `<p class="text-gray-400 text-sm text-center py-10">노선을 추가하여 집중을 시작하세요.</p>`;
-            activePathLine.setAttribute('d', ""); startFocusBtn.classList.add('hidden');
-            totalTimeDisplay.textContent = "0분"; return;
+        function updateGuideUI() {
+            document.querySelectorAll('.guide-step').forEach(step => step.classList.remove('active'));
+            document.getElementById(`step-${currentGuideStep}`).classList.add('active');
+            
+            const indicators = document.querySelectorAll('.step-indicator');
+            indicators.forEach((ind, i) => {
+                if (i < currentGuideStep) ind.classList.replace('bg-gray-200', 'bg-[#2AC1BC]');
+                else ind.classList.replace('bg-[#2AC1BC]', 'bg-gray-200');
+            });
         }
-        selectedPath.forEach((leg, i) => {
-            total += leg.duration;
-            if (i === 0) pathD += `M ${leg.from.x} ${leg.from.y} `;
-            pathD += `L ${leg.to.x} ${leg.to.y} `;
-            const item = document.createElement('div');
-            item.className = "ticket-card bg-gray-50 p-3 rounded-xl flex justify-between items-center animate-fadeIn";
-            item.innerHTML = `<div class="text-sm"><span class="font-bold">${leg.from.name}</span> <span class="text-gray-300 mx-1">➔</span> <span class="font-bold">${leg.to.name}</span></div>
-                    <div class="flex items-center gap-2"><span class="text-xs font-bold text-[#2AC1BC] bg-white px-2 py-1 rounded-lg">${leg.duration}분</span>
-                    ${!isFocusing ? `<button onclick="removeLeg(${i})" class="text-gray-300 hover:text-red-400 px-1">✕</button>` : ''}</div>`;
-            pathListEl.appendChild(item);
-        });
-        activePathLine.setAttribute('d', pathD); totalTimeDisplay.textContent = `${total}분`;
-        startFocusBtn.classList.remove('hidden');
-    }
 
-    window.removeLeg = (index) => { if (isFocusing) return; selectedPath.splice(index, 1); renderPath(); };
+        function togglePause() {
+            if (!isFocusing) return;
+            isPaused = !isPaused;
+            const btnIcon = document.getElementById('pause-btn-icon');
+            if (isPaused) {
+                btnIcon.textContent = "▶";
+                AudioCtrl.setVolume(0);
+            } else {
+                btnIcon.textContent = "⏸";
+                AudioCtrl.setVolume(0.4);
+            }
+        }
 
-    function toggleUIControls(lock) {
-        if (lock) { bookingCard.classList.add('locked'); pathCard.classList.add('locked'); }
-        else { bookingCard.classList.remove('locked'); pathCard.classList.remove('locked'); }
-        startSelect.disabled = endSelect.disabled = lock;
-        document.getElementById('add-leg-btn').classList.toggle('btn-disabled', lock);
-    }
+        function updateLegPreview() {
+            if (isFocusing) return;
+            const fromId = startSelect.value;
+            const toId = endSelect.value;
+            const delay = parseInt(delayInput.value) || 0;
+            
+            if (fromId && toId && fromId !== toId) {
+                const baseTime = TRAVEL_TIMES[`${fromId}-${toId}`] || DEFAULT_TIME;
+                document.getElementById('preview-time').textContent = baseTime + delay;
+                document.getElementById('leg-preview').classList.add('active');
+            } else { document.getElementById('leg-preview').classList.remove('active'); }
+        }
 
-    function startFocus() {
-        if (selectedPath.length === 0) return;
-        isFocusing = true; isPaused = false;
-        initialTotalSeconds = selectedPath.reduce((acc, leg) => acc + leg.duration, 0) * 60;
-        totalSecondsRemaining = initialTotalSeconds;
-        toggleUIControls(true); renderPath();
-        tripStatus.style.display = 'none';
-        focusDashboard.classList.add('active');
-        cornerSoundPanel.classList.add('active');
+        function handleStationClick(id) {
+            if (isFocusing) return;
+            if (!startSelect.value) { startSelect.value = id; } 
+            else if (startSelect.value !== id) { endSelect.value = id; }
+            updateLegPreview();
+        }
 
-        AudioCtrl.playDeparture();
-        AudioCtrl.startAmbient(selectedSound);
+        function addLeg() {
+            if (isFocusing) return;
+            const fromId = startSelect.value, toId = endSelect.value;
+            const delay = parseInt(delayInput.value) || 0;
 
-        if(timerInterval) clearInterval(timerInterval);
-        timerInterval = setInterval(updateTimer, 1000);
-        updateTimerUI(); moveObject(0);
-    }
+            if (!fromId || !toId || fromId === toId) return;
+            const fromS = STATIONS.find(s => s.id === fromId), toS = STATIONS.find(s => s.id === toId);
+            const baseTime = TRAVEL_TIMES[`${fromId}-${toId}`] || DEFAULT_TIME;
+            
+            selectedPath.push({ 
+                from: fromS, 
+                to: toS, 
+                duration: baseTime + delay,
+                base: baseTime,
+                delay: delay
+            });
 
-    function updateTimer() {
-        if (isPaused) return;
-        if (totalSecondsRemaining <= 0) { completeFocus(); return; }
-        totalSecondsRemaining--; updateTimerUI();
-        moveObject(1 - (totalSecondsRemaining / initialTotalSeconds));
-    }
+            startSelect.value = toId; 
+            endSelect.value = "";
+            delayInput.value = 0; 
+            renderPath(); 
+            updateLegPreview();
+        }
 
-    function updateTimerUI() {
-        const m = Math.floor(totalSecondsRemaining / 60), s = totalSecondsRemaining % 60;
-        timerDisplay.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-        progressBar.style.width = `${((initialTotalSeconds - totalSecondsRemaining) / initialTotalSeconds) * 100}%`;
-        let acc = 0, elapsed = (initialTotalSeconds - totalSecondsRemaining) / 60, current = selectedPath[0];
-        for(let leg of selectedPath) { acc += leg.duration; if (elapsed <= acc) { current = leg; break; } }
-        document.getElementById('current-leg-info').textContent = `${current.from.name} ➔ ${current.to.name}`;
-    }
+        function renderPath() {
+            pathListEl.innerHTML = "";
+            let total = 0, pathD = "";
+            if (selectedPath.length === 0) {
+                pathListEl.innerHTML = `<p class="text-gray-400 text-sm text-center py-10">노선을 추가하여 집중을 시작하세요.</p>`;
+                activePathLine.setAttribute('d', ""); startFocusBtn.classList.add('hidden');
+                totalTimeDisplay.textContent = "0분"; return;
+            }
+            selectedPath.forEach((leg, i) => {
+                total += leg.duration;
+                if (i === 0) pathD += `M ${leg.from.x} ${leg.from.y} `;
+                pathD += `L ${leg.to.x} ${leg.to.y} `;
+                
+                const item = document.createElement('div');
+                item.className = "ticket-card bg-gray-50 p-3 rounded-xl flex justify-between items-center animate-fadeIn";
+                
+                const delayText = leg.delay > 0 ? `<span class="text-[10px] text-orange-400 ml-1">(+${leg.delay} 지연)</span>` : '';
+                
+                item.innerHTML = `
+                    <div class="text-sm">
+                        <span class="font-bold">${leg.from.name}</span> 
+                        <span class="text-gray-300 mx-1">➔</span> 
+                        <span class="font-bold">${leg.to.name}</span>
+                        ${delayText}
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-[#2AC1BC] bg-white px-2 py-1 rounded-lg">${leg.duration}분</span>
+                        ${!isFocusing ? `<button onclick="removeLeg(${i})" class="text-gray-300 hover:text-red-400 px-1">✕</button>` : ''}
+                    </div>`;
+                pathListEl.appendChild(item);
+            });
+            activePathLine.setAttribute('d', pathD); totalTimeDisplay.textContent = `${total}분`;
+            startFocusBtn.classList.remove('hidden');
+        }
 
-    function moveObject(progress) {
-        const pathLength = activePathLine.getTotalLength();
-        if (pathLength === 0) return;
-        const point = activePathLine.getPointAtLength(progress * pathLength);
-        movingObject.setAttribute('transform', `translate(${point.x}, ${point.y})`);
-    }
+        window.removeLeg = (index) => { if (isFocusing) return; selectedPath.splice(index, 1); renderPath(); };
 
-    function resetToMain() {
-        if (timerInterval) clearInterval(timerInterval);
-        isFocusing = isPaused = false;
-        AudioCtrl.stopAmbient();
-        focusDashboard.classList.remove('active');
-        cornerSoundPanel.classList.remove('active');
-        tripStatus.style.display = 'block';
-        movingObject.setAttribute('transform', 'translate(-100, -100)');
-        timerDisplay.textContent = "00:00";
-        progressBar.style.width = "0%";
-        toggleUIControls(false);
-        selectedPath = [];
-        startSelect.value = endSelect.value = "";
-        renderPath(); updateLegPreview();
-    }
+        function toggleUIControls(lock) {
+            if (lock) { bookingCard.classList.add('locked'); pathCard.classList.add('locked'); } 
+            else { bookingCard.classList.remove('locked'); pathCard.classList.remove('locked'); }
+            startSelect.disabled = endSelect.disabled = delayInput.disabled = lock;
+            document.getElementById('add-leg-btn').classList.toggle('btn-disabled', lock);
+        }
 
-    function completeFocus() {
-        if (timerInterval) clearInterval(timerInterval);
-        AudioCtrl.stopAmbient();
-        AudioCtrl.playArrival();
-        const duration = Math.round(initialTotalSeconds / 60);
-        const name = selectedPath.map(p => p.from.name).join('➔') + '➔' + selectedPath[selectedPath.length-1].to.name;
-        history.unshift({ name, duration, date: new Date().toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) });
-        renderHistory();
-        setTimeout(() => { alert(`🎉 목적지에 도착했습니다!\n${duration}분간의 소중한 집중 시간을 지켜내셨습니다.`); resetToMain(); }, 100);
-    }
+        function startFocus() {
+            if (selectedPath.length === 0) return;
+            isFocusing = true; isPaused = false;
+            initialTotalSeconds = selectedPath.reduce((acc, leg) => acc + leg.duration, 0) * 60;
+            totalSecondsRemaining = initialTotalSeconds;
+            toggleUIControls(true); renderPath();
+            tripStatus.style.display = 'none'; 
+            focusDashboard.classList.add('active');
+            cornerSoundPanel.classList.add('active');
+            
+            AudioCtrl.playDeparture();
+            AudioCtrl.startAmbient(selectedSound);
 
-    function renderHistory() {
-        const container = document.getElementById('history-list');
-        container.innerHTML = history.length ? "" : `<p class="col-span-2 text-gray-400 text-sm italic py-4">아직 완료된 여정이 없습니다.</p>`;
-        history.slice(0, 6).forEach(item => {
-            const el = document.createElement('div');
-            el.className = "flex justify-between items-center p-4 bg-white rounded-2xl border border-gray-100 woowa-shadow animate-fadeIn";
-            el.innerHTML = `<div class="flex flex-col"><span class="font-bold text-gray-800 text-sm truncate max-w-[150px]">${item.name}</span><span class="text-[10px] text-gray-400">${item.date}</span></div>
+            if(timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
+            updateTimerUI(); moveObject(0);
+        }
+
+        function updateTimer() {
+            if (isPaused) return;
+            if (totalSecondsRemaining <= 0) { completeFocus(); return; }
+            totalSecondsRemaining--; updateTimerUI();
+            moveObject(1 - (totalSecondsRemaining / initialTotalSeconds));
+        }
+
+        function updateTimerUI() {
+            const m = Math.floor(totalSecondsRemaining / 60), s = totalSecondsRemaining % 60;
+            timerDisplay.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            progressBar.style.width = `${((initialTotalSeconds - totalSecondsRemaining) / initialTotalSeconds) * 100}%`;
+            let acc = 0, elapsed = (initialTotalSeconds - totalSecondsRemaining) / 60, current = selectedPath[0];
+            for(let leg of selectedPath) { acc += leg.duration; if (elapsed <= acc) { current = leg; break; } }
+            document.getElementById('current-leg-info').textContent = `${current.from.name} ➔ ${current.to.name}`;
+        }
+
+        function moveObject(progress) {
+            const pathLength = activePathLine.getTotalLength();
+            if (pathLength === 0) return;
+            const point = activePathLine.getPointAtLength(progress * pathLength);
+            movingObject.setAttribute('transform', `translate(${point.x}, ${point.y})`);
+        }
+
+        function resetToMain() {
+            if (timerInterval) clearInterval(timerInterval);
+            isFocusing = isPaused = false;
+            AudioCtrl.stopAmbient();
+            focusDashboard.classList.remove('active');
+            cornerSoundPanel.classList.remove('active');
+            tripStatus.style.display = 'block';
+            movingObject.setAttribute('transform', 'translate(-100, -100)');
+            timerDisplay.textContent = "00:00";
+            progressBar.style.width = "0%";
+            toggleUIControls(false);
+            selectedPath = [];
+            startSelect.value = endSelect.value = "";
+            delayInput.value = 0;
+            renderPath(); updateLegPreview();
+        }
+
+        function completeFocus() {
+            if (timerInterval) clearInterval(timerInterval);
+            AudioCtrl.stopAmbient();
+            AudioCtrl.playArrival();
+            const duration = Math.round(initialTotalSeconds / 60);
+            const name = selectedPath.map(p => p.from.name).join('➔') + '➔' + selectedPath[selectedPath.length-1].to.name;
+            history.unshift({ name, duration, date: new Date().toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) });
+            renderHistory();
+            setTimeout(() => { alert(`🎉 목적지에 도착했습니다!\n${duration}분간의 소중한 집중 시간을 지켜내셨습니다.`); resetToMain(); }, 100);
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('history-list');
+            container.innerHTML = history.length ? "" : `<p class="col-span-2 text-gray-400 text-sm italic py-4">아직 완료된 여정이 없습니다.</p>`;
+            history.slice(0, 6).forEach(item => {
+                const el = document.createElement('div');
+                el.className = "flex justify-between items-center p-4 bg-white rounded-2xl border border-gray-100 woowa-shadow animate-fadeIn";
+                el.innerHTML = `<div class="flex flex-col"><span class="font-bold text-gray-800 text-sm truncate max-w-[150px]">${item.name}</span><span class="text-[10px] text-gray-400">${item.date}</span></div>
                     <div class="text-right"><span class="text-[#2AC1BC] font-bold text-lg">${item.duration}</span> <span class="text-gray-400 text-xs font-bold">MIN</span></div>`;
-            container.appendChild(el);
-        });
-    }
+                container.appendChild(el);
+            });
+        }
 
-    window.onload = init;
-</script>
+        window.onload = init;
+    </script>
 </body>
 </html>
